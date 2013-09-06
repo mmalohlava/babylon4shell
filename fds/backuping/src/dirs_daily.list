@@ -1,0 +1,7 @@
+/etc/ INCLUDE_SUBDIRS
+/root/ NOT_INCLUDE_SUBDIRS
+/root/bin/ INCLUDE_SUBDIRS
+/home/imap/ INCLUDE_SUBDIRS
+/var/spool/mail/ INCLUDE_SUBDIRS
+/home/httpd/ INCLUDE_SUBDIRS
+/home/fleurbank/bin/ INCLUDE_SUBDIRS

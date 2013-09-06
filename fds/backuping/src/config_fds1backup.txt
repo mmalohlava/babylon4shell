@@ -1,0 +1,3 @@
+//172.30.20.92/cfs /home/samba/public/cfs
+#//172.30.20.92/common /home/samba/public/common
+#//172.30.20.92/public /home/samba/public/public

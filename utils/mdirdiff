@@ -1,0 +1,30 @@
+#!/bin/bash
+# mdiff.sh -- created 2009-01-27, <+NAME+>
+# @Last Change: 24-Dez-2004.
+# @Revision:    0.0
+
+PREFIX_TO_APPEND="\/home\/michal\/prg\/java\/workspace\/SOFA2_TRUNK\/"
+PREFIX_TO_CLEAR=".*workspace_klesnil_sofa_branch\/sofa\/"
+
+if [ $# -ne 1 ]; then
+        echo "Usage $0 <filename-to-diff>"
+        exit 1
+fi
+
+if [ -d "$1" ]; then
+        FFILE_DIR=$1
+else
+        FFILE_DIR=$(cd $(dirname $1); pwd)
+fi
+
+FDIR_TO_DIFF=$FFILE_DIR
+
+SDIR_TO_DIFF=`echo "$FDIR_TO_DIFF" | sed -e "s/$PREFIX_TO_CLEAR/$PREFIX_TO_APPEND/"`
+
+if [ ! -d "$SDIR_TO_DIFF" ]; then
+        echo "Directory $SDIR_TO_DIFF does not exist... Exiting"
+        exit 1;
+fi
+
+dirdiff $FDIR_TO_DIFF $SDIR_TO_DIFF
+# vi: 

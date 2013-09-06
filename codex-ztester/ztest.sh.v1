@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Testing tool for C# homework
+
+#
+# parameters
+#
+HOMEWORKS_TAR=$1
+
+#
+# basic settings
+# 
+THIS_SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd; )
+# test inputs
+TEST_INPUTS_DIR=${THIS_SCRIPT_DIR}/tests
+TEST_OUTPUT_DIR=${THIS_SCRIPT_DIR}/outputs
+TMP_DIR=${THIS_SCRIPT_DIR}/tmp
+# pattern of file with source code
+SOURCE_FILE_PATTERN="DU1"
+# if renaming of source files is required 
+# - renaming finds all source files matching SOURCE_FILE_PATTERN and append .cs suffix
+RENAMING_REQUIRED=true
+RESULT_LOGFILE="result.log"
+
+# MSC compiler
+MSC_COMPILER=/cygdrive/c/
+
+
+function init() {
+        [ ! -d "${TMP_DIR}" ] && mkdir "${TMP_DIR}"
+        [ ! -d "${TEST_OUTPUT_DIR}" ] && mkdir "${TEST_OUTPUT_DIR}"
+}
+
+function helpme() {
+        echo "${0} - automatic tester of C# homeworks"
+        echo "Usage: ${0} <tar file>"
+        echo
+}
+
+function untarHomeworkTar() {
+        local TAR_FILE="$1"
+        echo "* Untaring input file to ${TMP_DIR} ..."
+        tar -xvf "${TAR_FILE}" -C "${TMP_DIR}/"
+        
+        if [ -n "${RENAMING_REQUIRED}"   -a "${RENAMING_REQUIRED}" = "true"  ]; then
+                echo "* renaming files matching pattern ${SOURCE_FILE_PATTERN}"
+                find "${TMP_DIR}" -name "$SOURCE_FILE_PATTERN" -exec mv {} {}.cs \;
+        fi
+}
+
+function getStudentName() {
+        local SNAME="$1"
+        SNAME=${SNAME%_*}
+        echo ${SNAME}
+}
+
+function testSolution() {
+        local SOLUTION_DIR="$1"
+        local SOLUTION_EXEC="TODO EXEC"
+        local OUTPUT_DIR=$(basename ${SOLUTION_DIR})
+        local OUTPUT_DIR=${TEST_OUTPUT_DIR}/${OUTPUT_DIR%_*}
+        [ ! -d "${OUTPUT_DIR}" ] && mkdir "${OUTPUT_DIR}"
+        local LOG_FILE="$SOLUTION_DIR/$RESULT_LOGFILE" 
+
+        find  "${TEST_INPUTS_DIR}" -name "*.txt" | while read CIRCUIT_DEF_FILE; do
+                CIRCUIT_DEF_FILENAME=$(basename "$CIRCUIT_DEF_FILE")
+                CIRCUIT_DEF_DIR=$(dirname "$CIRCUIT_DEF_FILE")
+                echo "  * testing circuit:     $CIRCUIT_DEF_FILENAME in directory $CIRCUIT_DEF_DIR"
+                
+                find "$CIRCUIT_DEF_DIR" -name "*.in" | while read TEST_IN_FILE; do
+                        # original output of test
+                        TEST_OUT_FILE=${TEST_IN_FILE%.in}.out
+                        CIRCUIT_DEF_DIRNAME=$(basename "$CIRCUIT_DEF_DIR")
+                        # directory to save outputs of the solution
+                        SOLUTION_TEST_OUT_DIR="$OUTPUT_DIR/$CIRCUIT_DEF_DIRNAME"
+                        [ ! -d "$SOLUTION_TEST_OUT_DIR" ] && mkdir "$SOLUTION_TEST_OUT_DIR"
+                        SOLUTION_OUT_FILE="$SOLUTION_TEST_OUT_DIR/$(basename "$TEST_OUT_FILE")"
+
+                        echo "    * testing input $TEST_IN_FILE"
+                        
+                        if [ ! -f "$TEST_OUT_FILE" ]; then
+                                echo "     - test output $TEST_OUT_FILE does not exist - TEST SKIPPED"
+                                continue
+                        fi
+
+                        echo ${SOLUTION_EXEC} "${CIRCUIT_DEF_FILE}" "${TEST_IN_FILE}" #> ${SOLUTION_OUT_FILE}
+
+                        # diff settings
+                        # -w : ignore all white spaces
+                        # -B : ignore blank lines
+                        # -y : output in two columns
+                        diff -w "${SOLUTION_OUT_FILE}" "${TEST_OUT_FILE}"
+                done
+        done
+}
+
+if [ -z "$1" ]; then
+        helpme
+        exit 1
+fi
+
+# main script
+
+init 
+
+untarHomeworkTar ${HOMEWORKS_TAR}
+
+ls -1 "${TMP_DIR}" | while read HOMEWORK_DIR; do
+ echo "--------------------"
+ echo " * testing homework: $HOMEWORK_DIR"
+ echo " * student         : $(getStudentName $(basename $HOMEWORK_DIR))"
+ 
+ # test solution
+ testSolution "$HOMEWORK_DIR"
+done
+
+# vi: 
